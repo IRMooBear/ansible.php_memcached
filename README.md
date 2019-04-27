@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/IRMooBear/ansible.php_memcached.svg?branch=master)](https://travis-ci.org/IRMooBear/ansible.php_memcached)
+
 PHP Memcached
 =========
 
