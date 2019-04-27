@@ -1,0 +1,50 @@
+---
+- name: extracting memcached files
+  become: yes
+  unarchive:
+    remote_src: yes
+    src: http://pecl.php.net/get/memcached-{{ php_memcached_version }}.tgz
+    dest: /usr/local/src/
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+- name: change ownership
+  become: yes
+  file:
+    path: /usr/local/src/memcached-{{ php_memcached_version }}
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: yes
+- name: check memcached build dirty
+  stat:
+    path: /usr/local/src/memcached-{{ php_memcached_version }}/Makefile
+  register: memcached_dirty_check
+- name: make clean memcached
+  become: no
+  make:
+    target: clean
+    chdir: /usr/local/src/memcached-{{ php_memcached_version }}
+  when: memcached_dirty_check.stat.exists
+- name: phpize memcached
+  become: no
+  command: phpize
+  args:
+    chdir: /usr/local/src/memcached-{{ php_memcached_version }}
+- name: configure memcached
+  become: no
+  command: ./configure --enable-memcached --disable-memcached-sasl
+  args:
+    chdir: /usr/local/src/memcached-{{ php_memcached_version }}
+- name: make memcached
+  become: no
+  make:
+    params:
+      MAKEFLAGS: -j{{ compile_threads }}
+      NUM_THREADS: "{{ compile_threads }}"
+  args:
+    chdir: /usr/local/src/memcached-{{ php_memcached_version }}
+- name: make install memcached
+  become: yes
+  make:
+    target: install
+  args:
+    chdir: /usr/local/src/memcached-{{ php_memcached_version }}

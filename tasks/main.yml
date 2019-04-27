@@ -1,0 +1,21 @@
+---
+# tasks file for php-memcached
+- name: get php extension dir for memcached
+  command: php-config --extension-dir
+  register: php_extension_dir
+- name: check memcached exists
+  stat:
+    path: "{{ php_extension_dir.stdout }}/memcached.so"
+  register: memcached_check
+- import_tasks: compile_memcached.yml
+  when: not memcached_check.stat.exists
+- name: copy memcached.ini
+  become: yes
+  template:
+    src: memcached.ini
+    dest: /etc/php.d/memcached.ini
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart php-fpm
